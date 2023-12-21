@@ -1,4 +1,21 @@
+import json
 from itertools import permutations
+
+import json
+
+file_path = 'data_2023-01-16.json'  # Remplacez par le chemin d'accès à votre fichier
+
+# Chemin vers le fichier de sortie sur votre système
+output_file_path = r'C:\Users\nicol\OneDrive\Bureau\Python\python_hackathon\data_triee.json'
+
+
+try:
+    with open(file_path, 'r') as file:
+        poubelles_data = json.load(file)
+    #print("Contenu du fichier JSON :", poubelles_data)
+except Exception as e:
+    print(f"Erreur lors de la lecture du fichier JSON : {e}")
+
 
 def calculate_total_weight(matrix, path):
     total_weight = 0
@@ -30,8 +47,27 @@ def travelling_salesman(matrix, start_vertex):
 
     return min_path, min_weight
 
-def format_path(path):
-    return ["poubelle" + str(vertex) for vertex in path]
+
+def create_json_file(path, poubelles_info, output_file):
+    formatted_path = []
+    for vertex in path:
+        if vertex == 0:  # Vérifier si le sommet actuel est le dépôt
+            # Ajouter les coordonnées du dépôt
+            depot_coords = poubelles_info.get("start")
+            formatted_path.append({"latitude": depot_coords[0], "longitude": depot_coords[1]})
+        else:
+            vertex_info = poubelles_info.get(str(vertex))
+            if vertex_info:
+                # Ajouter les informations des poubelles
+                formatted_path.append({"latitude": vertex_info["Latitude"], "longitude": vertex_info["Longitude"]})
+            else:
+                # Gérer le cas où les informations de la poubelle ne sont pas trouvées
+                formatted_path.append({"latitude": None, "longitude": None})
+
+    # Écrire les données formatées dans un fichier JSON
+    with open(output_file, 'w') as file:
+        json.dump(formatted_path, file, indent=4)
+
 
 # Exemple d'utilisation
 matrix = [
@@ -40,9 +76,13 @@ matrix = [
     [15, 7, 0, 8],
     [6, 3, 12, 0]
 ]
-start_vertex = 0  # Index du point de départ
 
+start_vertex = 0  # Index du point de départ
+# Exemple d'utilisation de l'algorithme TSP
 path, weight = travelling_salesman(matrix, start_vertex)
-formatted_path = format_path(path)
-print("Chemin:", formatted_path)
+# Exemple d'utilisation de l'algorithme TSP (assurez-vous d'avoir les bons paramètres pour 'path' et 'poubelles_data')
+create_json_file(path, poubelles_data, output_file_path)
+print(path)
 print("Poids total:", weight)
+
+
