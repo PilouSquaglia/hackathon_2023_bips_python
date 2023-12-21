@@ -1,62 +1,48 @@
 from itertools import permutations
-import sys
 
-def calculate_total_weight(graph, path):
+def calculate_total_weight(matrix, path):
     total_weight = 0
     for i in range(len(path) - 1):
-        if graph[path[i]][path[i + 1]]['value'] != 0:
-            total_weight += graph[path[i]][path[i + 1]]['weight']
+        total_weight += matrix[path[i]][path[i + 1]]
     return total_weight
 
-def is_excluded_vertex(graph, vertex):
-    # Une poubelle est exclue si toutes ses liaisons ont une valeur de 0
-    return all(graph[vertex][i]['value'] == 0 for i in range(len(graph)) if i != vertex)
-
-
-def travelling_salesman(graph, start_vertex):
-    n = len(graph)
+def travelling_salesman(matrix, start_vertex):
+    n = len(matrix)
     min_path = []
-    min_weight = sys.maxsize
+    min_weight = float('inf')
 
-    # S'assurer que le sommet de départ est valide
-    if start_vertex < 0 or start_vertex >= n or is_excluded_vertex(graph, start_vertex):
-        return "Sommet de départ invalide", sys.maxsize
+    # Vérifier si le point de départ est valide
+    if start_vertex < 0 or start_vertex >= n:
+        return "Point de départ invalide", min_weight
 
-    # Identifier les poubelles à exclure
-    excluded_vertices = [i for i in range(n) if is_excluded_vertex(graph, i)]
+    # Générer toutes les permutations des sommets, en excluant le point de départ
+    vertices = list(range(n))
+    vertices.remove(start_vertex)
+    permutations_of_vertices = permutations(vertices)
 
-    # Considérer uniquement les poubelles non exclues pour les permutations, en commençant par le sommet de départ
-    valid_vertices = [i for i in range(n) if i not in excluded_vertices and i != start_vertex]
-    valid_permutations = [[start_vertex] + list(p) for p in permutations(valid_vertices)]
-
-    for permutation in valid_permutations:
-        current_weight = calculate_total_weight(graph, permutation)
+    for perm in permutations_of_vertices:
+        current_path = [start_vertex] + list(perm)
+        current_weight = calculate_total_weight(matrix, current_path)
 
         if current_weight < min_weight:
             min_weight = current_weight
-            min_path = permutation
+            min_path = current_path
 
     return min_path, min_weight
 
 def format_path(path):
-    return [f"poubelle{vertex}" for vertex in path]
+    return ["poubelle" + str(vertex) for vertex in path]
 
-
-graph = [
-    # Poubelle 1
-    [{'weight': 0, 'value': 1}, {'weight': 2, 'value': 1}, {'weight': 4, 'value': 1}, {'weight': 7, 'value': 1}],
-
-    # Poubelle 2 (ignorée car toutes ses liaisons vers poubelle 4 ont une valeur de 0)
-    [{'weight': 2, 'value': 0}, {'weight': 0, 'value': 0}, {'weight': 3, 'value': 0}, {'weight': 6, 'value': 0}],
-
-    # Poubelle 3
-    [{'weight': 4, 'value': 1}, {'weight': 3, 'value': 1}, {'weight': 0, 'value': 1}, {'weight': 1, 'value': 1}],
-
-    # Poubelle 4 (aucune liaison valide avec poubelle 2)
-    [{'weight': 7, 'value': 1}, {'weight': 6, 'value': 1}, {'weight': 1, 'value': 1}, {'weight': 0, 'value': 1}]
+# Exemple d'utilisation
+matrix = [
+    [0, 2, 9, 10],
+    [1, 0, 6, 4],
+    [15, 7, 0, 8],
+    [6, 3, 12, 0]
 ]
+start_vertex = 0  # Index du point de départ
 
-path, weight = travelling_salesman(graph , 0)
+path, weight = travelling_salesman(matrix, start_vertex)
 formatted_path = format_path(path)
 print("Chemin:", formatted_path)
 print("Poids total:", weight)
